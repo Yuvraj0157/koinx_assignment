@@ -27,6 +27,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
     });
   }
   if (req.file.mimetype !== "text/csv") {
+    fs.unlinkSync(req.file.path);
     return res.status(400).json({
       message: "Invalid file format. Ensure file is a CSV file",
     });
