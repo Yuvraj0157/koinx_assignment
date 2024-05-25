@@ -34,7 +34,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
           amount: parseFloat(data['Buy/Sell Amount']),
           price: parseFloat(data.Price)
         });
-        console.log(trade);
+        // console.log(trade);
         results.push(trade);
     })
     .on('end', () => {
@@ -56,7 +56,30 @@ app.post('/upload', upload.single('file'), (req, res) => {
 });
 
 
+app.post('/balance', (req, res) => {
+  const { timestamp } = req.body;
+  const Time = new Date(timestamp);
 
+  Trade.find({ utc_time: { $lt: Time } })
+    .then((trades) => {
+      const assetBalance = trades.reduce((acc, trade) => {
+        const { base_coin, operation, amount } = trade;
+        if (!acc[base_coin]) {
+          acc[base_coin] = 0;
+        }
+        acc[base_coin] += operation.toLowerCase() === 'buy' ? amount : -amount;
+        return acc;
+      }, {});
+
+      res.status(200).json(assetBalance);
+    })
+    .catch((err) => {
+      res.status(500).json({
+        message: 'An error occurred',
+        error: err,
+      });
+    });
+});
 
 
 app.get('/', (req, res) => {
